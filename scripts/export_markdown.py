@@ -111,7 +111,8 @@ def tier2_md(obj):
 
 
 def plate_md(plate, heading):
-    return "### %s\n\n%s" % (heading, paragraphs(plate["text"]))
+    lines = [line for entry in plate["text"] for line in entry.split("\n") if line.strip()]
+    return "### %s\n\n%s" % (heading, paragraphs(lines))
 
 
 def scene_md(scene):

@@ -140,16 +140,18 @@ def walk(en, zh, path, errors):
         errors.append("%s: empty translation" % path)
         return
 
-    # Tokens and inline markup are load-bearing: {morse}, {player_name} and the
-    # <em>/<strong> the renderer passes through as HTML.
+    # {morse} and {player_name} are substituted by the engine, so they must match
+    # the English. Emphasis is the translator's call: <em>/<strong> may go
+    # anywhere, but the renderer passes them through as HTML, so each must close.
     for token in ("{morse}", "{player_name}"):
         if en.count(token) != zh.count(token):
             errors.append("%s: %s appears %d time(s), English has %d"
                           % (path, token, zh.count(token), en.count(token)))
-    for tag in ("<em>", "</em>", "<strong>", "</strong>"):
-        if en.count(tag) != zh.count(tag):
-            errors.append("%s: %s appears %d time(s), English has %d"
-                          % (path, tag, zh.count(tag), en.count(tag)))
+    for tag in ("em", "strong"):
+        opened, closed = zh.count("<%s>" % tag), zh.count("</%s>" % tag)
+        if opened != closed:
+            errors.append("%s: <%s> opened %d time(s), closed %d"
+                          % (path, tag, opened, closed))
 
 
 def check_against_english(lang, data):

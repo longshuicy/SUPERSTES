@@ -73,9 +73,10 @@ them:
   `morse`, `requiresExamined`, `image`, `background`, `widget`, `layout`, `prefix`, `numeral`,
   `maxLength`, `final`, `secretPhrase`. These are what the state machine matches on; a translated
   `value: "called"` breaks a reactive block silently, which is exactly the failure this catches.
-- **Tokens and inline markup must balance.** `{morse}`, `{player_name}`, and the `<em>` /
-  `<strong>` pairs the renderer passes through as HTML must appear the same number of times as in
-  the English.
+- **Tokens must match; markup must close.** `{morse}` and `{player_name}` are substituted by the
+  engine, so they must appear the same number of times as in the English. `<em>` / `<strong>` are
+  the translator's call — a translation may emphasise different words than the English does — but
+  the renderer passes them through as HTML, so every one opened in a string must be closed in it.
 - **No empty strings.**
 
 If `node` is absent the structural check is skipped with a warning and the pack still builds. The
@@ -92,10 +93,23 @@ scripts/export_markdown.py zh scenes-c1 endings-c2   # just these
 
 Renders the scene and ending masters as `exports/<lang>/<name>.md` — prose laid out by scene,
 with engine keys shown in `code` for context — so the words can be read or edited in tools that
-don't want JSON. It is **one-way**: nothing reads the Markdown back, and the JSON stays the
-master. Edits made in the export have to be carried into `content/<lang>/` by hand, then
-`--check` and build as above. The script fails on any key it doesn't know how to render, so a new
-prose field can't silently go missing from the export.
+don't want JSON. The script fails on any key it doesn't know how to render, so a new prose field
+can't silently go missing from the export.
+
+```bash
+scripts/import_markdown.py zh scenes-c1   # exports/zh/scenes-c1.md -> content/zh/scenes-c1.json
+```
+
+The way back. It reads only the exporter's layout (headings with `(id)` markers, *If …:* /
+*When …:* lines, `>` quoted responses) and takes only prose from it. Every structural value comes
+from the existing JSON, which must line up scene for scene, object for object, option for option.
+The JSON stays the master; run `--check` and build afterwards as above.
+
+A text array must keep the English entry count, so when the Markdown has more paragraphs than
+entries, neighbouring paragraphs share one. Scene text is split back into paragraphs on blank lines,
+so those are joined with a blank line. Plate captions render each entry as a single margin-less
+`<p>`, so those are joined with a line break, which looks the same. Before writing, the importer
+re-exports its result and aborts if the wording differs from the input in any way.
 
 ---
 
