@@ -1,0 +1,16 @@
+{
+  "heading": "另一个见证者也在计数",
+  "registers": [
+    { "numeral": "I",   "label": "那些场景",   "layout": "wide",     "prefix": ["scene-", "ending-"] },
+    { "numeral": "II",  "label": "留下来的",   "layout": "square",   "prefix": ["obj-"] },
+    { "numeral": "III", "label": "那些人",     "layout": "portrait", "prefix": ["char-", "plate-"] }
+  ],
+  "unseen": "未揭晓",
+  "plateWord": "图版",
+  "enter": "查看留下来的",
+  "again": "从头开始",
+  "credit": [
+    "画面由作者拟写提示词，经 Midjourney 生成，",
+    "再以 Procreate 修改润色。"
+  ]
+}

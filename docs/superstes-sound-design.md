@@ -104,7 +104,9 @@ wall.
 - Persist nothing. No localStorage anywhere in this build; refresh restarts everything, audio
   included, and audio comes back on.
 - Icon states: `speaker-on` (default), `speaker-off`. Two inline SVGs, no icon library.
-- Keyboard reachable, `aria-pressed`, `aria-label="Sound on/off"`.
+- Keyboard reachable, `aria-pressed`, `aria-label="Sound on/off"` — the only string audio owns, and
+  the only thing here that localizes: it comes from `I18N.ui("soundOn"/"soundOff")`, not a literal.
+  Nothing else in the score changes by language (see superstes-localization.md §5).
 - Fade in over 800ms when enabled rather than snapping to full volume.
 - **It has to outrank the tally wall.** The wall is a full-screen layer at `z-index: 80` and the
   player can sit on it for as long as they like with an ending's bed still sounding, so the toggle

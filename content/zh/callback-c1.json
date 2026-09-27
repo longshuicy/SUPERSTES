@@ -1,0 +1,21 @@
+{
+  "keys": ["looked_away", "acknowledged_witness"],
+  "table": [
+    {
+      "match": { "looked_away": true, "acknowledged_witness": "held" },
+      "text": "我曾有一次没有看向他。后来轮到了他们，我没有再移开视线。有些亏欠大概是没有办法还给原来那个人的。我想，这已经是我能做到的最多了。"
+    },
+    {
+      "match": { "looked_away": false, "acknowledged_witness": "avoided" },
+      "text": "我一直看着他，我看见他把那些难堪一点点咽下去。很久以后我才知道，原谅一个人原来是很费力的。奇怪的是，他原谅我的时候，却显得那么轻而易举。"
+    },
+    {
+      "match": { "looked_away": true, "acknowledged_witness": "avoided" },
+      "text": "那一次我把脸转开了。后来有人站在我面前，我还是把脸转开了。许多年过去，我才明白，有些事情不是经历过一次就会懂的。它只是换了一个人，换了一边，又照原来的样子发生了一次。"
+    },
+    {
+      "match": { "looked_away": false, "acknowledged_witness": "held" },
+      "text": "我们看见了彼此，对视了一会儿，谁也没有因此变得更清澈。我想，人这一辈子总有几次是不能逃避的。这一次，我没有闭眼。"
+    }
+  ]
+}

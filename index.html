@@ -10,6 +10,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@400;500;600;700&family=Grenze:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Mrs+Saint+Delafield&family=Special+Elite&display=swap" rel="stylesheet">
 
+<!-- Chinese faces, pulled for ?lang=zh. css/style.css swaps the whole font
+     palette at body[data-lang="zh"]; the Latin faces above have no CJK
+     coverage at all, so without these the Chinese pack falls back to the
+     system UI font and loses the whole register.
+
+     The body face is LXGW WenKai (霞鹜文楷), an open kai — a brush-derived
+     regular script, the closest Chinese equivalent to the hand this game is
+     set in. Google Fonts carries no kai at all, hence the second CDN. It is
+     served as ~26 unicode-range subsets, so a page pulls only the characters
+     it uses. Noto Serif SC stays in the stack behind the system kai faces as
+     a last resort and downloads only if everything above it fails. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/lxgwwenkaigbscreen.css" rel="stylesheet">
+
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -27,25 +42,33 @@
   <!-- sound: on by default, sounding from the first gesture; press to turn off -->
   <button id="sound-toggle" type="button" aria-pressed="true" aria-label="Sound on"></button>
 
+  <!-- language: the second standing control, under the sound button and styled
+       as its twin. Live for the whole run — switching repaints in place and
+       keeps the run (see main.js switchLanguage), so it does not need to hide
+       once the game starts. Its face is the language it offers, not the one
+       you are in: 文 while reading English, A while reading Chinese. Hidden by
+       i18n.js when no translation pack is loaded. -->
+  <button id="lang-toggle" type="button" hidden></button>
+
   <main id="scene-content" class="scene-content"></main>
 
   <!-- title screen -->
   <section id="title-screen">
     <div class="title-inner">
-      <h1>Superstes</h1>
-      <p class="latin">Latin: <em>a witness</em>. The one who was there.</p>
-      <p class="latin small">Literally <em>standing beyond</em>: the one who outlived it, and can still say so.</p>
+      <h1 data-i18n="heading">Superstes</h1>
+      <p class="latin" data-i18n-html="latin">Latin: <em>a witness</em>. The one who was there.</p>
+      <p class="latin small" data-i18n-html="latinSmall">Literally <em>standing beyond</em>: the one who outlived it, and can still say so.</p>
 
       <div class="blurb">
-        <p class="blurb-line">He was not the first.</p>
-        <p class="blurb-line">They never asked him to recant.</p>
-        <p class="blurb-line">Recanting was never the point.</p>
-        <p class="blurb-line">They asked him who had given it to him,</p>
-        <p class="blurb-line">and he looked past them while he refused,</p>
-        <p class="blurb-line">and the water ran clear onto the floor.</p>
-        <p class="blurb-line">No one is bleeding.</p>
-        <p class="blurb-line">You will not be the last.</p>
-        <p class="blurb-line">Something is already keeping count.</p>
+        <p class="blurb-line" data-i18n="blurb.0">He was not the first.</p>
+        <p class="blurb-line" data-i18n="blurb.1">They never asked him to recant.</p>
+        <p class="blurb-line" data-i18n="blurb.2">Recanting was never the point.</p>
+        <p class="blurb-line" data-i18n="blurb.3">They asked him who had given it to him,</p>
+        <p class="blurb-line" data-i18n="blurb.4">and he looked past them while he refused,</p>
+        <p class="blurb-line" data-i18n="blurb.5">and the water ran clear onto the floor.</p>
+        <p class="blurb-line" data-i18n="blurb.6">No one is bleeding.</p>
+        <p class="blurb-line" data-i18n="blurb.7">You will not be the last.</p>
+        <p class="blurb-line" data-i18n="blurb.8">Something is already keeping count.</p>
       </div>
 
       <!-- The second door, directly under the blurb rather than below the
@@ -55,24 +78,28 @@
            naming the chapter would spoil it. Hovering sounds one drip, which is
            Chapter II's entire score. -->
       <p class="second-door">
-        <button id="skip-to-ii" type="button">Someone else was keeping count
-          &middot; <span class="door-numeral">II</span></button>
+        <button id="skip-to-ii" type="button"><span data-i18n="secondDoor">Someone else was
+          keeping count</span> &middot; <span class="door-numeral">II</span></button>
       </p>
 
-      <button id="begin" type="button">Enter the fog</button>
-      <p class="foot">15&ndash;20 minutes &middot; no saves &middot; refreshing begins again</p>
+      <button id="begin" type="button" data-i18n="begin">Enter the fog</button>
+      <p class="foot" data-i18n="foot">15&ndash;20 minutes &middot; no saves &middot; refreshing begins again</p>
     </div>
   </section>
 
   <!-- Load order matters and there are no modules (tech doc §1): every chapter's
        data first, then chapters.js which points SCENES/ENDINGS/WALL at one of
        them, then the engine. -->
+  <script src="js/i18n.js"></script>
   <script src="js/scenes.js"></script>
   <script src="js/endings.js"></script>
   <script src="js/wall.js"></script>
   <script src="js/scenes-c2.js"></script>
   <script src="js/endings-c2.js"></script>
   <script src="js/wall-c2.js"></script>
+  <!-- Generated translation packs (scripts/build_content.py). Each registers
+       itself with I18N; chapters.js then picks one. -->
+  <script src="js/content-zh.js"></script>
   <script src="js/chapters.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/gallery.js"></script>

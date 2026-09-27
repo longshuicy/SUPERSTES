@@ -199,9 +199,10 @@ const Gallery = (function () {
       section.className = "wall-register";
 
       const h3 = document.createElement("h3");
+      const inkedHere = mine.filter(i => has(i.id)).length;
       h3.innerHTML = esc(reg.numeral + ". " + reg.label) +
-        '<span class="wall-of">' + mine.filter(i => has(i.id)).length +
-        " of " + mine.length + "</span>";
+        '<span class="wall-of">' + esc(I18N.ui("registerCount")
+          .replace("{n}", inkedHere).replace("{total}", mine.length)) + "</span>";
       section.appendChild(h3);
 
       const grid = document.createElement("div");
@@ -419,7 +420,7 @@ const Gallery = (function () {
     box.className = "wall-box";
     box.setAttribute("role", "dialog");
     box.setAttribute("aria-modal", "true");
-    box.setAttribute("aria-label", cell.dataset.caption || "Plate");
+    box.setAttribute("aria-label", cell.dataset.caption || I18N.ui("plate"));
     box.tabIndex = -1;
 
     const fig = document.createElement("div");
@@ -479,37 +480,52 @@ const Gallery = (function () {
   // the time, including on a non-final (?all) open, where it never exists.
   let againWrap = null;
 
-  function open(opts) {
+  // What the open wall was opened as, so a language switch can rebuild it the
+  // same way. Null whenever the wall is closed.
+  let openOpts = null;
+
+  // `instant` skips the fade in. Used only when the wall is being rebuilt
+  // underneath itself (a language switch): the overlay is opaque, so fading a
+  // replacement up from zero shows the title screen through it for 400ms.
+  function open(opts, instant) {
     if (overlay) return;
     const final = !!(opts && opts.final);
+    openOpts = { final: final };
 
     overlay = document.createElement("div");
     overlay.className = "wall-overlay" + (final ? " is-final" : "");
-
-    if (!final) {
-      const close = document.createElement("button");
-      close.type = "button";
-      close.className = "wall-close";
-      close.setAttribute("aria-label", "Close");
-      close.innerHTML = "&times;";
-      close.addEventListener("click", dismiss);
-      overlay.appendChild(close);
-    }
 
     overlay.appendChild(build());
 
     // A wall with no `again` offers no way out at all — the only exit is the
     // browser's own. Chapter II used to ship that way; it now carries Begin
     // again (script doc, reversed decision) but still has no nextChapter.
-    if (final && WALL.again) {
+    //
+    // Both kinds of wall get this exit, and it is the only one either gets.
+    // A `?all` wall used to carry a × in the top corner instead; that corner
+    // now belongs to the standing sound and language controls, and a third
+    // icon of a different kind crowded them. The foot of the wall is where
+    // this wall already puts its way onward.
+    if (WALL.again) {
       const wrap = document.createElement("div");
-      wrap.className = "continue-wrap wall-again" +
-        (hasSecret() && !secretRevealed ? " wall-again-pending" : "");
+      // The plaque gates the foot of the *final* wall only. On a `?all` wall
+      // nothing was witnessed and so nothing is being withheld.
+      const gated = final && hasSecret() && !secretRevealed;
+      const wrap_cls = "continue-wrap wall-again" + (gated ? " wall-again-pending" : "");
+      wrap.className = wrap_cls;
       const again = document.createElement("button");
       again.type = "button";
       again.className = "continue";
       again.textContent = WALL.again;
-      again.addEventListener("click", () => window.location.reload());
+      // Final: start over from here. `?all`: a reload would only reopen the
+      // same wall, so drop the parameter and land on the title screen.
+      again.addEventListener("click", () => {
+        if (final) return window.location.reload();
+        const q = new URLSearchParams(window.location.search);
+        q.delete("all");
+        const rest = q.toString();
+        window.location.href = window.location.pathname + (rest ? "?" + rest : "");
+      });
       wrap.appendChild(again);
 
       // A wall may also open onto the next chapter. Both exits appear together
@@ -521,7 +537,7 @@ const Gallery = (function () {
       // and buys a guaranteed-clean state instead of unwinding an ending's
       // body classes, background layers and runtime by hand. "Begin again"
       // already works exactly this way.
-      if (WALL.nextChapter) {
+      if (final && WALL.nextChapter) {
         const on = document.createElement("button");
         on.type = "button";
         on.className = "continue wall-next-chapter";
@@ -538,21 +554,34 @@ const Gallery = (function () {
       againWrap = null;
     }
 
+    // Opaque before it is in the document, so there is no transition to run.
+    if (instant) overlay.classList.add("visible");
     document.body.appendChild(overlay);
     document.body.classList.add("wall-open");
-    void overlay.offsetHeight;
-    overlay.classList.add("visible");
+    if (!instant) {
+      void overlay.offsetHeight;
+      overlay.classList.add("visible");
+    }
     overlay.scrollTop = 0;
 
     const secretEl = overlay.querySelector(".wall-secret");
     if (secretEl) armSecret(secretEl, overlay);
+
+    // A rebuild is not an arrival: put the reader back where they were reading
+    // and do not move focus.
+    if (instant) {
+      overlay.scrollTop = resumeScroll;
+      resumeScroll = 0;
+      if (!final) document.addEventListener("keydown", onOverlayKey);
+      return;
+    }
 
     // Never the "Begin again" button here: in the final wall it starts
     // hidden (above), and even once visible it sits at the very foot of a
     // long page — focusing it scrolls the overlay there, undoing the
     // scrollTop reset just above and opening the wall already at its own
     // ending. `preventScroll` guards the close button too, on principle.
-    (overlay.querySelector(".wall-close") || overlay).focus({ preventScroll: true });
+    overlay.focus({ preventScroll: true });
     if (!final) document.addEventListener("keydown", onOverlayKey);
   }
 
@@ -580,10 +609,39 @@ const Gallery = (function () {
     const dying = overlay;
     overlay = null;
     againWrap = null;
+    openOpts = null;
     setTimeout(() => dying.remove(), 400);
   }
 
   function setRevealAll(v) { revealAll = !!v; }
+
+  // Language switch. Every caption on this wall is derived at runtime from
+  // SCENES / ENDINGS, and the wall's own copy comes from WALL — all three now
+  // point at the other language, so the cache built against the old one is
+  // stale and nothing else is. Unlike reset(), the count survives: `seen`,
+  // `revealAll` and the plaque state belong to the run, not to the language.
+  //
+  // An open wall is rebuilt in place. The node is dropped synchronously rather
+  // than through dismiss(), whose 400ms fade would let open() see a live
+  // overlay and bail.
+  let resumeScroll = 0;
+
+  function relabel() {
+    cache = null;
+    if (!overlay) return;
+    const opts = openOpts;
+    resumeScroll = overlay.scrollTop;
+    closePlate();
+    document.removeEventListener("keydown", onOverlayKey);
+    overlay.remove();
+    overlay = null;
+    againWrap = null;
+    openOpts = null;
+    // `wall-open` deliberately stays on the body: it is re-added a few lines
+    // later in the same task, and dropping it would let the page behind
+    // scroll for the length of a frame.
+    open(opts, true);
+  }
 
   // Chapter switch. The count belongs to the chapter that earned it, and the
   // catalogue is derived from whichever SCENES/ENDINGS are active, so carrying
@@ -604,6 +662,8 @@ const Gallery = (function () {
     open: open,
     close: dismiss,
     reset: reset,
+    relabel: relabel,
+    isOpen: () => !!overlay,
     setRevealAll: setRevealAll,
     count: () => catalogue().filter(i => has(i.id)).length,
     total: () => catalogue().length

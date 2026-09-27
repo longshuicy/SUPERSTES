@@ -1,0 +1,47 @@
+{
+  "lang": "zh",
+  "htmlLang": "zh-Hans",
+  "toggleGlyph": "EN",
+  "toggleLabel": "English",
+  "toggleAria": "Switch to English",
+  "ui": {
+    "examine": "仔细端详",
+    "continue": "继续",
+    "plate": "图版",
+    "unnamedPlayer": "某某",
+    "registerCount": "{n} / 总计 {total}",
+    "soundOn": "声效已开",
+    "soundOff": "静音",
+    "calendarTitle": "五月 · MDXLIII",
+    "calendarWeekdays": [
+      "日",
+      "一",
+      "二",
+      "三",
+      "四",
+      "五",
+      "六"
+    ]
+  },
+  "title": {
+    "docTitle": "SUPERSTES",
+    "metaDescription": "一个关于不合时宜的真理的短篇叙事游戏。",
+    "heading": "Superstes",
+    "latin": "拉丁语：<em>见证者</em>。当时在场的那个人。",
+    "latinSmall": "字面意思是<em>站在其外</em>：经历过这一切，并且还能把它叙述出来的人。",
+    "blurb": [
+      "他不是头一个。",
+      "他们从来没有要他认罪。",
+      "认不认罪，从来不是要紧的事。",
+      "他们只问他，这东西是谁交给他的，",
+      "他没有回答，视线越过他们，看向了别处，",
+      "而清澈的水淌了一地。",
+      "没有流血。",
+      "你不会是最后一个。",
+      "计数已经开始。"
+    ],
+    "secondDoor": "另一个见证者也在计数。",
+    "begin": "走进迷雾",
+    "foot": "15–20 分钟 · 无存档 · 刷新后从头开始"
+  }
+}

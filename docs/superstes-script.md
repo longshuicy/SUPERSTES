@@ -4,8 +4,14 @@
 A short narrative web game. First person, past tense. Black and white line illustration.
 Tone: bizarre, anachronistic, sad, melancholic. Themes: time, destiny, witness vs. intervention.
 
-**Companion docs:** `superstes-art-prompts.md` (image generation), `superstes-tech-design.md` (build spec).
-This doc is the single source of truth for narrative content. Where the three disagree, this one wins.
+**Companion docs:** `superstes-art-prompts.md` (image generation), `superstes-tech-design.md` (build spec),
+`superstes-localization.md` (translations).
+This doc is the single source of truth for narrative content. Where they disagree, this one wins.
+
+**Translations.** The English below is the source text. A translation is a derived work and lives in
+`content/<lang>/`, never here — see `superstes-localization.md`. A change to *wording* here needs no
+translation work; a change to the *shape* of a scene (a new hotspot, a renamed flag, a reordered
+choice list) invalidates every translation, and `scripts/build_content.py --check` will say so.
 
 **Revision note.** This is v3. Scene count, every tier2 object, every reactive block, every flag key,
 both branch points, and all three endings are **unchanged** from v2. Only prose changed. The art and

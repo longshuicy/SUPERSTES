@@ -1217,14 +1217,18 @@ body.is-ending .scene-content { padding-top: 20vh; }
    turns it on is also the gesture browsers require before audio may start.
    ────────────────────────────────────────────────────────────────────── */
 
-#sound-toggle {
+/* The standing controls: sound, and language beneath it. One rule for both, so
+   a change to the well, the ring or the lit state cannot land on one and miss
+   the other. Positions are set per button below; everything else is shared.
+
+   Both sit above the tally wall (80) as well as plates and endings — sound doc
+   §2 says always visible, and the wall is a page the player can sit on while
+   the ending's bed is still sounding. Below the wall's own lightbox (90),
+   which any click dismisses anyway. */
+#sound-toggle,
+#lang-toggle {
   position: fixed;
-  top: 1.4rem;
   right: 1.4rem;
-  /* Above the tally wall (80) as well as plates and endings — sound doc §2
-     says always visible, and the wall is a page the player can sit on while
-     the ending's bed is still sounding. Below the wall's own lightbox (90),
-     which any click dismisses anyway. */
   z-index: 85;
   width: 2.6rem;
   height: 2.6rem;
@@ -1235,16 +1239,31 @@ body.is-ending .scene-content { padding-top: 20vh; }
   background: rgba(6, 6, 5, 0.55);
   border: 1px solid var(--rule);
   border-radius: 50%;
-  color: var(--paper-faint);
   cursor: pointer;
-  opacity: 0.55;
+  /* The lit resting state. The sound button spends the whole game here (it is
+     on by default), so this is what "a standing control" looks like in this
+     corner, and the language button matches it rather than sitting a stop
+     dimmer and reading as disabled. */
+  color: var(--candle-dim);
+  opacity: 0.8;
   transition: opacity 300ms ease, color 300ms ease, border-color 300ms ease;
 }
 
 #sound-toggle:hover,
-#sound-toggle:focus-visible { opacity: 1; color: var(--candle); border-color: var(--candle-dim); }
-#sound-toggle.is-on { color: var(--candle-dim); opacity: 0.8; }
-#sound-toggle.is-on:hover { color: var(--candle); }
+#sound-toggle:focus-visible,
+#lang-toggle:hover,
+#lang-toggle:focus-visible {
+  opacity: 1;
+  color: var(--candle);
+  border-color: var(--candle-dim);
+  outline: none;
+}
+
+#sound-toggle { top: 1.4rem; }
+
+/* Muted only when sound is actually off — the one control here with an
+   off state to show. */
+#sound-toggle:not(.is-on) { color: var(--paper-faint); opacity: 0.55; }
 
 #sound-toggle svg {
   width: 1.2rem;
@@ -1260,7 +1279,9 @@ body.is-ending .scene-content { padding-top: 20vh; }
 }
 
 @media (max-width: 640px) {
-  #sound-toggle { top: 0.9rem; right: 0.9rem; width: 2.3rem; height: 2.3rem; }
+  #sound-toggle,
+  #lang-toggle { right: 0.9rem; width: 2.3rem; height: 2.3rem; }
+  #sound-toggle { top: 0.9rem; }
 }
 
 /* ──────────────────────────────────────────────────────── the tally wall */
@@ -1623,30 +1644,12 @@ body.is-ending .scene-content { padding-top: 20vh; }
 
 body.wall-open { overflow: hidden; }
 
-/* Sits beside the sound toggle, not under it — the toggle keeps the corner. */
-.wall-close {
-  position: fixed;
-  top: 1.4rem;
-  right: 4.8rem;
-  z-index: 2;
-  width: 2.6rem;
-  height: 2.6rem;
-  display: grid;
-  place-items: center;
-  font-family: var(--body);
-  font-size: 1.4rem;
-  line-height: 1;
-  background: rgba(6, 6, 5, 0.55);
-  border: 1px solid var(--rule);
-  border-radius: 50%;
-  color: var(--paper-faint);
-  cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 300ms ease, color 300ms ease, border-color 300ms ease;
-}
-
-.wall-close:hover,
-.wall-close:focus-visible { opacity: 1; color: var(--candle); border-color: var(--candle-dim); }
+/* The wall has no close icon in any of its forms. Its only exit is the button
+   at its foot — "Begin again" on the wall an ending arrives at, and the same
+   button dropping `?all` on the wall opened straight from the title screen.
+   The top corner belongs to the two standing controls (sound, language) and a
+   third icon of a different kind crowded them. Escape still dismisses a
+   non-final wall. */
 
 /* ── the wall as the page an ending arrives at ── */
 
@@ -1700,4 +1703,162 @@ body.wall-open { overflow: hidden; }
   .wall-grid.square   { grid-template-columns: repeat(2, 1fr); }
   .wall-grid.portrait { grid-template-columns: repeat(2, 1fr); }
   .wall-overlay { padding: 4rem 1rem 3.5rem; }
+}
+
+/* ═════════════════════════════════════════════════ language ══════════ */
+
+/* Shape, well, ring and lit state come from the shared standing-control rule
+   up with #sound-toggle. What is left here is position and lettering.
+
+   The face is the language it offers, not the one being read: 文 while you are
+   in English, EN while you are in Chinese. A single 文 is legible to the
+   reader who wants it; "EN" is the more familiar mark going the other way than
+   a bare A, and two letters still fit the circle. The accessible name carries
+   the full word, in the offered language, with a matching `lang` (i18n.js). */
+#lang-toggle {
+  top: 4.5rem;               /* 1.4rem + the sound button's 2.6rem + 0.5rem */
+  font-family: var(--label);
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* Offering EN: two Latin letters, set in the Latin label face rather than the
+   kai body face and tightened to sit inside the same circle as one CJK glyph. */
+#lang-toggle[data-lang="zh"] {
+  font-family: "Grenze", Georgia, serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  #lang-toggle { top: 3.6rem; font-size: 0.9rem; }   /* 0.9 + 2.3 + 0.4 */
+  #lang-toggle[data-lang="zh"] { font-size: 0.82rem; }
+}
+
+/* ─────────────────────────────────────────────── the Chinese palette
+
+   Every face in this stylesheet is reached through the six variables in
+   :root, so a translation swaps the whole typographic register in one block
+   rather than at ~40 call sites. None of the Latin faces carry CJK glyphs at
+   all — without this the Chinese pack renders in the system UI font.
+
+   The body face is LXGW WenKai (霞鹜文楷), an open 楷体 — brush-derived regular
+   script, with the stroke entries and exits of a written hand still in it.
+   That is the right register for this game and a Song/Ming face is not: a
+   Song is the Chinese newspaper letter, upright and mechanical, and it made
+   the narration read like a report. The whole story is one person remembering
+   out loud. Kai is the closest Chinese equivalent to the hand the English is
+   set in.
+
+   Google Fonts carries no kai, so it comes from jsDelivr; the system kai
+   faces sit behind it for anyone offline, and Noto Serif SC behind those as
+   the last resort before generic serif. Only one of them is ever downloaded.
+
+   Ma Shan Zheng stays in the display slot the blackletter held. It is much
+   more cursive than the body kai, which keeps the hierarchy the blackletter
+   gave the English, and it carries the calendar's hand as well.
+
+   The metric adjustments below are not cosmetic. CJK glyphs are full-width and
+   have no ascender/descender air, so Latin line-heights read cramped and Latin
+   letter-spacing — set on nearly every .label rule for the small-caps look —
+   reads as broken text rather than as tracking. */
+body[data-lang="zh"] {
+  --kai: "LXGW WenKai Screen", "Kaiti SC", "STKaiti", "TW-Kai", KaiTi, BiauKai,
+         "Noto Serif SC", Georgia, serif;
+
+  --display: "Ma Shan Zheng", var(--kai);
+  --head:    var(--kai);
+  --body:    var(--kai);
+  --label:   var(--kai);
+  --cal-title: "Ma Shan Zheng", var(--kai);
+  --cal-mono:  var(--kai);
+
+  /* A CJK line needs fewer characters to fill the same measure, and more air
+     between lines to stay readable at this size. */
+  --measure: 30rem;
+
+  /* WenKai ships a single weight and is already light on a dark ground; asking
+     for 300 here only invited a synthesised thin from the fallbacks. */
+  line-height: 2;
+}
+
+body[data-lang="zh"] .narration p,
+body[data-lang="zh"] .plate-text p,
+body[data-lang="zh"] .response p,
+body[data-lang="zh"] .tier2-panel p {
+  line-height: 2;
+}
+
+/* Tracking that flatters small-caps Latin pulls CJK apart. Kept on the
+   numerals and register headings, which are still Roman. */
+body[data-lang="zh"] .tier2-heading,
+body[data-lang="zh"] .prompt,
+body[data-lang="zh"] .choice-body,
+body[data-lang="zh"] .ending-label,
+body[data-lang="zh"] .foot,
+body[data-lang="zh"] .latin,
+body[data-lang="zh"] #begin,
+body[data-lang="zh"] #skip-to-ii,
+body[data-lang="zh"] .continue,
+body[data-lang="zh"] .wall-veil,
+body[data-lang="zh"] .calendar-title {
+  letter-spacing: 0.02em;
+}
+
+/* The blackletter title kept a heavy display size the brush hand does not
+   need; Ma Shan Zheng at the same size overruns the measure on a phone. */
+body[data-lang="zh"] #title-screen h1 {
+  letter-spacing: 0.08em;
+}
+
+/* The calendar's weekday row is a single character per column in Chinese
+   rather than one Latin initial, so the typed-glyph face's wide tracking is
+   what makes it wrap. */
+body[data-lang="zh"] .cal-head {
+  letter-spacing: 0;
+}
+
+/* Noto Serif SC ships no italic, so every `font-style: italic` in this
+   stylesheet becomes a synthesised oblique — a slanted CJK line is not an
+   emphasis convention anywhere, it just looks like a rendering fault. The
+   whole-block italics (the blurb, plates, the closing response, the wall's
+   translation) go upright; they are already set apart by size, colour and
+   measure. Inline <em>, which carries actual stress in the prose, takes the
+   Chinese convention instead: 着重号, a mark beside each character. */
+body[data-lang="zh"] .blurb,
+body[data-lang="zh"] .latin em,
+body[data-lang="zh"] .tier2-label,
+body[data-lang="zh"] .response.closing,
+body[data-lang="zh"] .plate-text,
+body[data-lang="zh"] .wall-secret-translation,
+body[data-lang="zh"] #carve-input::placeholder {
+  font-style: normal;
+}
+
+body[data-lang="zh"] em {
+  font-style: normal;
+  text-emphasis: sesame;
+  -webkit-text-emphasis: sesame;
+  text-emphasis-color: var(--candle-dim);
+  -webkit-text-emphasis-color: var(--candle-dim);
+  /* 着重号 sit under the line in Chinese, not over it — over is the Japanese
+     convention and reads here as a stray row of marks. */
+  text-emphasis-position: under right;
+  -webkit-text-emphasis-position: under;
+}
+
+/* …except where <em> wraps a whole quoted line rather than a word or two.
+   Sesame marks under a four-line remembered quotation read as damage; those
+   passages are set off by colour alone. */
+body[data-lang="zh"] .plate-text em,
+body[data-lang="zh"] .latin em {
+  text-emphasis: none;
+  -webkit-text-emphasis: none;
+}
+
+/* The wordmark is Latin and is not translated: it keeps the blackletter it has
+   in every language. Only the copy around it changes face. */
+body[data-lang="zh"] #title-screen h1 {
+  font-family: "Grenze Gotisch", "UnifrakturMaguntia", Georgia, serif;
 }

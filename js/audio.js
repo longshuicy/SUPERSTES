@@ -569,7 +569,7 @@ function updateSpeakerIcon() {
   if (!toggleBtn) return;
   toggleBtn.innerHTML = AUDIO.enabled ? SPEAKER_ON : SPEAKER_OFF;
   toggleBtn.setAttribute("aria-pressed", String(AUDIO.enabled));
-  toggleBtn.setAttribute("aria-label", AUDIO.enabled ? "Sound on" : "Sound off");
+  toggleBtn.setAttribute("aria-label", I18N.ui(AUDIO.enabled ? "soundOn" : "soundOff"));
   toggleBtn.classList.toggle("is-on", AUDIO.enabled);
 }
 

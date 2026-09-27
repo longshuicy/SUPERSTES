@@ -256,10 +256,18 @@ function typeMorseInto(node, glyphs, startDelay) {
 
 /* ────────────────────────────────────────────────────────── transitions */
 
+// Run once, at the instant the outgoing content is removed and before the
+// incoming content is built. A language switch parks the repaint of the page's
+// own language hooks here: `body[data-lang]` carries the font stack, the line
+// height and the italic rules, so flipping it any earlier sets the outgoing
+// language's words in the incoming language's face for the length of the fade.
+let onSwap = null;
+
 function fadeOut(cb) {
   content.classList.add("fade-out");
   setTimeout(() => {
     content.innerHTML = "";
+    if (onSwap) { const run = onSwap; onSwap = null; run(); }
     cb();
     content.scrollTop = 0;
     window.scrollTo(0, 0);
@@ -383,7 +391,7 @@ function renderTier2(list) {
   if (!list || !list.length) return;
 
   const wrap = el("div", "tier2");
-  const heading = el("p", "tier2-heading", "Examine");
+  const heading = el("p", "tier2-heading", I18N.ui("examine"));
   wrap.appendChild(heading);
 
   list.forEach(item => {
@@ -435,7 +443,11 @@ function renderTier2(list) {
    number, not Math.random, so the calendar looks the same on every render.
    ─────────────────────────────────────────────────────────────────────── */
 
-const CAL_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+// The weekday initials and the month/year caption are the calendar's only
+// words, so they come from the locale table rather than from here — a Chinese
+// calendar heads its columns 日一二三四五六, not S M T W T F S. The layout
+// below (May 1543 starting on a Tuesday) is history and does not localize.
+const calWeekdays = () => I18N.ui("calendarWeekdays");
 const CAL_LAST_STRUCK = 20;   // days 1..20 crossed out
 const CAL_CIRCLED = 24;       // never explained in-game
 
@@ -474,10 +486,10 @@ function handCircle(day) {
 
 function buildMayCalendar() {
   const wrap = el("div", "calendar");
-  wrap.appendChild(el("p", "calendar-title", "Maius · MDXLIII"));
+  wrap.appendChild(el("p", "calendar-title", I18N.ui("calendarTitle")));
 
   const grid = el("div", "calendar-grid");
-  CAL_WEEKDAYS.forEach(w => grid.appendChild(el("div", "cal-head", w)));
+  calWeekdays().forEach(w => grid.appendChild(el("div", "cal-head", w)));
 
   // May 1, 1543 (Julian) fell on a Tuesday — weekday index 2 of a S-M-T-W-T-F-S
   // header, so the grid opens with two empty cells. Verified against the
@@ -932,10 +944,28 @@ function unlockScrollAfterPlate() {
   window.scrollTo(0, plateScrollY);
 }
 
+// The plate currently on screen, or null. A plate is a fixed overlay outside
+// `#scene-content`, so a scene repaint does not touch it and a language switch
+// made while one is up would leave its caption in the old language behind the
+// new furniture. `relocalizePlate()` rewrites it in place.
+let livePlate = null;
+
+function relocalizePlate() {
+  if (!livePlate) return;
+  const scene = SCENES.find(sc => sc.id === livePlate.sceneId);
+  const raw = scene && (livePlate.slot === "closing" ? scene.closingPlate : scene.openingPlate);
+  livePlate.hint.textContent = I18N.ui("continue");
+  if (!raw) return;                       // a plate the other language has no copy of
+  const spec = normalizePlate(raw);
+  livePlate.caption.innerHTML = "";
+  if (spec.text) prose(livePlate.caption, spec.text);
+}
+
 // `sceneId` is the scene the plate belongs to (the arriving scene for an
 // opening plate, the departing one for a closing plate) — it names the plate's
-// sting; see the STINGS table in audio.js.
-function renderPlate(rawSpec, onDone, sceneId) {
+// sting; see the STINGS table in audio.js. `slot` says which of the scene's two
+// plates this is, so a language switch can find its counterpart again.
+function renderPlate(rawSpec, onDone, sceneId, slot) {
   const spec = normalizePlate(rawSpec);
   const plate = el("div", "plate" + (spec.text ? "" : " silent"));
   plate.setAttribute("role", "button");
@@ -961,7 +991,7 @@ function renderPlate(rawSpec, onDone, sceneId) {
   const caption = el("div", "plate-text");
   if (spec.text) prose(caption, spec.text);
 
-  const hint = el("p", "plate-hint", "Continue");
+  const hint = el("p", "plate-hint", I18N.ui("continue"));
 
   plate.appendChild(backdrop);
   plate.appendChild(figure);
@@ -978,11 +1008,13 @@ function renderPlate(rawSpec, onDone, sceneId) {
   plate.classList.add("visible");
   plate.focus();
   Sound.plateOpened(sceneId);
+  livePlate = { sceneId: sceneId, slot: slot || "opening", caption: caption, hint: hint };
 
   let done = false;
   function dismiss() {
     if (done) return;
     done = true;
+    livePlate = null;
     Sound.plateClosed();      // the sting lifts with the plate
     plate.classList.remove("visible");
     unlockScrollAfterPlate();
@@ -1023,7 +1055,7 @@ function renderExit(scene) {
         // Same reasoning as an opening plate: the destination's background is
         // put up behind the plate, not after it.
         setBackground(backgroundFor(choice.next));
-        return renderPlate(scene.closingPlate, () => advanceTo(choice.next), scene.id);
+        return renderPlate(scene.closingPlate, () => advanceTo(choice.next), scene.id, "closing");
       }
 
       // A branch option may carry its own prose, the same way a reactive
@@ -1050,14 +1082,19 @@ function renderExit(scene) {
 
 function renderContinue(onGo) {
   const wrap = el("div", "continue-wrap");
-  const b = el("button", "continue", "Continue");
+  const b = el("button", "continue", I18N.ui("continue"));
   b.type = "button";
   b.addEventListener("click", () => { b.disabled = true; onGo(); });
   wrap.appendChild(b);
   appendBlock(wrap);
 }
 
-function advanceTo(id) {
+// `opts.repaint` marks a re-render of the view already on screen (a language
+// switch) rather than an arrival at a new one. It skips the opening plate:
+// the plate is an arrival beat, and playing it again over a scene the player
+// has been sitting in reads as the game restarting.
+function advanceTo(id, opts) {
+  const repaint = !!(opts && opts.repaint);
   currentSceneId = id;
   // Asked of the data rather than of the id's spelling: Chapter I's endings are
   // "ending-a", Chapter II's are "c2-ending-a", and a prefix test would send
@@ -1067,13 +1104,13 @@ function advanceTo(id) {
   // An opening plate lands before a word of the scene is on screen. Fade the
   // outgoing scene first so nothing of it is left behind the plate.
   const scene = SCENES.find(s => s.id === id);
-  if (scene && scene.openingPlate) {
+  if (scene && scene.openingPlate && !repaint) {
     content.classList.add("fade-out");
     stopDrip();   // the outgoing scene's phrase ends with the outgoing scene
     // Swap the background now, while the plate hides it. Otherwise the plate
     // lifts onto the scene the player just left.
     setBackground(scene.background);
-    return renderPlate(scene.openingPlate, () => renderScene(id), id);
+    return renderPlate(scene.openingPlate, () => renderScene(id), id, "opening");
   }
 
   renderScene(id);
@@ -1130,7 +1167,7 @@ function renderEnding(id) {
 // {player_name} is inserted as a text node, never as markup, and never renders
 // as null/undefined/an empty gap.
 function appendClosing(node, closing) {
-  const name = (flags.player_name || "").trim() || "a name";
+  const name = (flags.player_name || "").trim() || I18N.ui("unnamedPlayer");
   String(closing).split(/\n{2,}/).forEach(part => {
     const p = document.createElement("p");
     const chunks = part.split("{player_name}");
@@ -1146,6 +1183,85 @@ function appendClosing(node, closing) {
     });
     node.appendChild(p);
   });
+}
+
+/* ───────────────────────────────────────────────────── language switch */
+
+// The toggle is beside the sound button and live for the whole run, so this
+// has to cost the player nothing. It does not reload: `I18N.setLang` swaps the
+// pack and rewrites the URL in place, `relocalizeChapter()` re-points SCENES /
+// ENDINGS / WALL / SHARED_CALLBACK at the same chapter's other language, and
+// the view repaints from data that is now Chinese.
+//
+// Everything the run has earned is untouched, because none of it is language:
+// `flags`, `examined`, the wall's `seen` count, which chapter is active, which
+// scene is on screen. The one casualty is position *within* a scene — the
+// reactive chain repaints from its first prompt, since `runtime.answered` is
+// rebuilt with the scene. Answering again writes the same flag it already
+// holds, so nothing downstream changes; it is a repeated question, not a lost
+// one. Trading that for a reload that would lose the whole run is not close.
+// Everything a view is about to paint, as one string, so the target language's
+// font subsets can be fetched during the fade instead of after it. Cheap and
+// approximate on purpose: it wants the glyph coverage, not the prose.
+function visibleTextOf(id) {
+  const ending = ENDINGS.find(e => e.id === id);
+  if (ending) {
+    return [ending.title, ending.baseOpening, lookup(ending.conditionalMiddle),
+            lookup(SHARED_CALLBACK), ending.specificCallback, ending.closing]
+      .filter(Boolean).join("");
+  }
+  const scene = SCENES.find(sc => sc.id === id);
+  if (!scene) return "";
+  const parts = [scene.title].concat(scene.text || []);
+  (scene.tier2 || []).forEach(t => parts.push(t.label));
+  (scene.reactive || []).forEach(r => {
+    parts.push(r.prompt);
+    (r.options || []).forEach(o => parts.push(o.label));
+  });
+  if (scene.branch) {
+    parts.push(scene.branch.prompt);
+    (scene.branch.options || []).forEach(o => parts.push(o.label));
+  }
+  return parts.filter(Boolean).join("");
+}
+
+function switchLanguage(target) {
+  if (!I18N.setLang(target)) return;   // pack, URL and nothing yet visible
+  relocalizeChapter();                 // SCENES/ENDINGS/WALL now the target's
+  if (currentSceneId) I18N.warmText(visibleTextOf(currentSceneId));
+
+  const playing = document.body.classList.contains("playing");
+
+  // A plate is a fixed overlay that a scene repaint does not reach, and it is
+  // the whole of what the player can see. Like the wall, it is rewritten in
+  // place and the hooks flip with it; the scene repainting behind it is hidden.
+  if (livePlate) {
+    I18N.applyLang();
+    relocalizePlate();
+    if (playing && currentSceneId) advanceTo(currentSceneId, { repaint: true });
+    return;
+  }
+
+  // The wall next, and before the `playing` test: it is an opaque overlay, so
+  // whenever it is up it *is* the view — including over the title screen, which
+  // is how `?all` opens it. It rebuilds synchronously, so the hooks flip now
+  // and land with it. Anything repainting underneath straddles a fade in the
+  // wrong face for 400ms, which nobody can see through the wall.
+  if (Gallery.isOpen()) {
+    I18N.applyLang();
+    if (playing && currentSceneId) advanceTo(currentSceneId, { repaint: true });
+    Gallery.relabel();
+    return;
+  }
+
+  // The title screen is static markup that `applyLang` rewrites itself, so its
+  // words and its face change together with no fade to straddle.
+  if (!playing || !currentSceneId) return I18N.applyLang();
+
+  // Otherwise the scene's own fade is the seam. Park the hook flip at its swap
+  // point so the new words and the new face arrive on the same frame.
+  onSwap = () => I18N.applyLang();
+  advanceTo(currentSceneId, { repaint: true });
 }
 
 /* ──────────────────────────────────────────────────────── dev shortcut */
@@ -1181,6 +1297,12 @@ function startGame(chapterKey) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  // Language first: Sound.init() labels the toggle, and the title screen has to
+  // be rewritten before it is shown rather than after.
+  I18N.resolve();
+  I18N.applyLang();
+  I18N.mountToggle(document.getElementById("lang-toggle"), switchLanguage);
+
   Sound.init();
   Sound.titleShown();
   const begin = document.getElementById("begin");

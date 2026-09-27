@@ -9,8 +9,12 @@ Tone: intimate, ordinary, melancholy, slightly surreal. The surrealism should ar
 
 **Companion docs:** `superstes-chapter-2-art-prompts.md` (art), `superstes-tech-design.md` (build —
 Chapter II needs no schema change, see §3), `superstes-sound-design.md` (audio — Chapter II adds ten bed
-slots and reuses everything else, see §3).  
+slots and reuses everything else, see §3), `superstes-localization.md` (translations).  
 This file is the single source of truth for Chapter II narrative content.
+
+**Translations.** The English below is the source text; a translation is a derived work living in
+`content/<lang>/`. Chapter II's plainness relative to Chapter I is load-bearing and a translation
+must preserve the gap — see `superstes-localization.md` §8.
 
 ---
 

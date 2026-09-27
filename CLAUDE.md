@@ -21,6 +21,7 @@ in sync is more important than any individual edit.
 | [docs/superstes-chapter-2-art-prompts.md](docs/superstes-chapter-2-art-prompts.md) | **Art (Ch II)** | Chapter II art prompts and filenames. |
 | [docs/superstes-tech-design.md](docs/superstes-tech-design.md) | **Tech** | Stack choices, file structure, the state machine, data shapes (SCENES/ENDINGS schema), chapter switching, constraints (no framework, no build step, `file://`-safe). Deliberately contains **no narrative content** — code examples with story text are illustrative only, never the real strings. |
 | [docs/superstes-sound-design.md](docs/superstes-sound-design.md) | **Sound** | Beds, stings, the morse drip, Chapter II's drip bed, the toggle, volume behavior, audio filenames, and the `Sound` interface `main.js` calls. Audio filenames live in `js/audio.js`, never in `scenes.js`/`endings.js`. |
+| [docs/superstes-localization.md](docs/superstes-localization.md) | **Localization** | How a translation is stored (`content/<lang>/*.json`), built (`scripts/build_content.py`), loaded (`js/i18n.js`, the packs, the `?lang=` switch) and typeset (the per-language font block). Owns what does *not* localize. Contains no narrative; translated prose lives in `content/<lang>/`. |
 
 ### Routing rule for new content
 
@@ -37,6 +38,11 @@ it there — don't let it leak into the wrong doc or drift the docs out of sync 
 - New or changed bed, sting, silence, volume rule, audio filename, or `Sound` method → **sound doc**.
   A new sound belongs inside `js/audio.js`, behind an existing `Sound` call, not as a new call site
   in `main.js`.
+- New language, translated string, locale font rule, or anything about the `?lang=` switch →
+  **localization doc**. Translated prose goes in `content/<lang>/`, never in `js/`. A new
+  *English* string that the engine composes (rather than reads from a data file) belongs in
+  `UI_EN` in `js/i18n.js` and in every pack's `ui` block — not inlined at the call site, or the
+  translations silently lose it.
 - If a change touches more than one domain (e.g. a new scene needs new art *and* new code), update
   **all** affected docs in the same change, not just the code. A code change whose corresponding doc
   goes unedited is the drift this file exists to prevent.
@@ -50,6 +56,11 @@ it there — don't let it leak into the wrong doc or drift the docs out of sync 
 3. Check the art doc for exact asset filenames before adding/renaming image references.
 4. Check the sound doc before touching `js/audio.js` — especially §1 (the three earned silences) and
    §12 (the `Sound` interface). The silences are load-bearing; they are cheap to break by accident.
+5. If you change a scene, ending, wall or flag in a way that alters the *shape* of the data — a new
+   scene, a new tier-2 hotspot, a renamed key, a reordered `options` array — every translation is
+   now structurally stale. Mirror the change in `content/<lang>/`, then run
+   `scripts/build_content.py --check <lang>`; it fails loudly on exactly this, which is what it is
+   for. Changing only English *wording* needs no rebuild.
 
 ### After editing code or docs
 
@@ -97,10 +108,18 @@ it there — don't let it leak into the wrong doc or drift the docs out of sync 
   bed *length*, not bitrate, and closing it means trimming the music to loops — an editorial call
   that has not been made. See sound doc §7 before "fixing" it.
 
+- Chinese ships as a *content pack*: the hand-editable masters are `content/zh/*.json` (pure JSON,
+  so the words can be edited or handed off without touching JavaScript), and
+  `js/content-zh.js` is generated from them by `scripts/build_content.py` and committed. Never
+  hand-edit the generated file. Same masters-are-truth bargain as the art and audio pipelines,
+  for the same reason: the game must run over `file://`, so it cannot fetch JSON. English is not a
+  pack — it stays as literals in `js/scenes.js` et al. and in `index.html`, and is what every pack
+  is structurally checked against. Localization doc §2–3.
+
 ## Conventions
 
-- No ES modules — plain `<script>` tags sharing globals. Load order: every chapter's data files →
-  `chapters.js` → `audio.js` → `gallery.js` → `main.js` (see `index.html` and tech doc §2). Keep it
-  that way (see tech doc §1 for why).
+- No ES modules — plain `<script>` tags sharing globals. Load order: `i18n.js` → every chapter's
+  data files → the translation packs → `chapters.js` → `audio.js` → `gallery.js` → `main.js` (see
+  `index.html` and tech doc §2). Keep it that way (see tech doc §1 for why).
 - No framework, no npm, no bundler, no backend, no persistence. Don't introduce any of these without
   discussing it with the user first — it's a stated constraint, not an oversight.
