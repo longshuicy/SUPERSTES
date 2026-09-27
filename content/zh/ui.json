@@ -5,13 +5,13 @@
   "toggleLabel": "English",
   "toggleAria": "Switch to English",
   "ui": {
-    "examine": "细看",
+    "examine": "仔细端详",
     "continue": "继续",
     "plate": "图版",
-    "unnamedPlayer": "一个名字",
-    "registerCount": "{n} / 共 {total}",
-    "soundOn": "声音已开",
-    "soundOff": "声音已关",
+    "unnamedPlayer": "某某",
+    "registerCount": "{n} / 总计 {total}",
+    "soundOn": "声效已开",
+    "soundOff": "静音",
     "calendarTitle": "五月 · MDXLIII",
     "calendarWeekdays": [
       "日",
@@ -25,23 +25,23 @@
   },
   "title": {
     "docTitle": "SUPERSTES",
-    "metaDescription": "一个关于对得太早的短篇叙事游戏。",
+    "metaDescription": "一个关于不合时宜的真理的短篇叙事游戏。",
     "heading": "Superstes",
     "latin": "拉丁语：<em>见证者</em>。当时在场的那个人。",
-    "latinSmall": "字面是<em>站在其外</em>：活过了它，并且还说得出来的那个人。",
+    "latinSmall": "字面意思是<em>站在其外</em>：经历过这一切，并且还能把它叙述出来的人。",
     "blurb": [
-      "他不是第一个。",
-      "他们从来没有要他翻悔。",
-      "翻不翻悔从来不是要点。",
-      "他们问他，这东西是谁给他的，",
-      "他拒绝的时候，眼睛越过他们看向别处，",
-      "而水清清地淌到地上。",
-      "没有人在流血。",
+      "他不是头一个。",
+      "他们从来没有要他认罪。",
+      "人不认罪，从来不是要紧的事。",
+      "他们只问他，这东西是谁交给他的，",
+      "他没有回答，视线越过他们，看向了别处，",
+      "而清澈水淌了一地。",
+      "没有流血。",
       "你不会是最后一个。",
-      "已经有什么在数着了。"
+      "计数已经开始。"
     ],
-    "secondDoor": "另有一个人也在数",
-    "begin": "走进雾里",
-    "foot": "15–20 分钟 · 无存档 · 刷新即从头开始"
+    "secondDoor": "另一个见证者也在计数。",
+    "begin": "走进迷雾",
+    "foot": "15–20 分钟 · 无存档 · 刷新后从头开始"
   }
 }

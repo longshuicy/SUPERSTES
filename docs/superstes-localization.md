@@ -83,6 +83,20 @@ check is a convenience, not a dependency.
 
 Run `--check` after editing the JSON and before committing. Run the plain build after that.
 
+### Markdown export
+
+```bash
+scripts/export_markdown.py zh                        # every scenes/endings master
+scripts/export_markdown.py zh scenes-c1 endings-c2   # just these
+```
+
+Renders the scene and ending masters as `exports/<lang>/<name>.md` — prose laid out by scene,
+with engine keys shown in `code` for context — so the words can be read or edited in tools that
+don't want JSON. It is **one-way**: nothing reads the Markdown back, and the JSON stays the
+master. Edits made in the export have to be carried into `content/<lang>/` by hand, then
+`--check` and build as above. The script fails on any key it doesn't know how to render, so a new
+prose field can't silently go missing from the export.
+
 ---
 
 ## 4. Runtime

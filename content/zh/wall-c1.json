@@ -1,22 +1,22 @@
 {
-  "heading": "已经有什么在数着了",
+  "heading": "计数已经开始",
   "registers": [
-    { "numeral": "I",   "label": "那些房间", "layout": "wide",     "prefix": ["scene-", "ending-"] },
+    { "numeral": "I",   "label": "场景", "layout": "wide",     "prefix": ["scene-", "ending-"] },
     { "numeral": "II",  "label": "物证",     "layout": "square",   "prefix": ["obj-"] },
     { "numeral": "III", "label": "受审的人", "layout": "portrait", "prefix": ["char-", "plate-"] }
   ],
-  "unseen": "不曾看见",
+  "unseen": "未揭晓",
   "plateWord": "图版",
-  "secretPrompt": "另有一问：那只水钟想告诉你什么？",
+  "secretPrompt": "问题：那只水钟想告诉你什么？",
   "secretLabel": "—",
-  "secretReveal": "还是直接说给我听",
+  "secretReveal": "揭晓答案",
   "secretPhrase": "SOL STAT. TERRA MOVET. EGO PRAECEDENS.",
-  "secretTranslation": "太阳站住不动。大地在走。我走在我的年代前面。",
-  "enter": "去看被数过的",
-  "again": "从头再来",
+  "secretTranslation": "太阳静止不动，地球围绕太阳旋转。我走在我的时代前面。",
+  "enter": "查看计数结果",
+  "again": "从头开始",
   "nextChapter": { "key": "ii", "label": "另有一个人也在数 · II" },
   "credit": [
     "画面由作者拟写提示词，经 Midjourney 生成，",
-    "再以 Procreate 手工描改。"
+    "再以 Procreate 修改润色。"
   ]
 }
